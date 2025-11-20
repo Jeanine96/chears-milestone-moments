@@ -4,8 +4,8 @@
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
-		"dev": "nodemon src/-env-file=.env src/index.js -dev",
-		"start": "node src/-env-file=.env src/index.js -dev"
+		"dev": "nodemon src/index.js --dev",
+		"start": "node src/index.js"
 	},
 	"author": "Stef van Wijchen (OWOW)",
 	"license": "ISC",

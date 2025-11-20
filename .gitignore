@@ -1,0 +1,20 @@
+# Node
+node_modules/
+dist/
+build/
+coverage/
+
+# Env files (API keys)
+.env
+.env.*
+
+# Logs
+*.log
+logs/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
