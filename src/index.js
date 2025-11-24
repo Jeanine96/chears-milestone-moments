@@ -7,6 +7,7 @@ import { Display } from "@owowagency/flipdot-emu";
 import "./preview.js";
 import "./api-slack.js";
 import { getSlackMessage } from "./api-slack.js";
+import { generateImage } from "./image-generation.js";
 
 const IS_DEV = process.argv.includes("--dev");
 
@@ -92,12 +93,15 @@ ticker.start(async ({ deltaTime, elapsedTime }) => {
     ctx.putImageData(imageData, 0, 0);
   }
 
-  let text = await getSlackMessage();
-  ctx.fillStyle = "#fff";
-  ctx.font = '12px "OpenSans" bold';
-  const { actualBoundingBoxAscent, actualBoundingBoxLeft } =
-    ctx.measureText(text);
-  ctx.fillText(text, actualBoundingBoxLeft + 2, actualBoundingBoxAscent + 5);
+  // let text = await getSlackMessage();
+  // ctx.fillStyle = "#fff";
+  // ctx.font = '12px "OpenSans" bold';
+  // const { actualBoundingBoxAscent, actualBoundingBoxLeft } =
+  //   ctx.measureText(text);
+  // ctx.fillText(text, actualBoundingBoxLeft + 2, actualBoundingBoxAscent + 5);
+  const generatedImage = await generateImage();
+  ctx.drawImage(generatedImage, 0, 0, width, height);
+  console.log(generateImage());
 
   {
     const imageData = ctx.getImageData(0, 0, width, height);

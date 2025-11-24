@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 dotenv.config();
-import fetch from "node-fetch"; // Only if Node <18
+import fetch from "node-fetch";
 
 const token = process.env.SLACK_BOT_TOKEN;
 const channelId = process.env.CHANNEL_ID;
