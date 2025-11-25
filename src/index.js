@@ -1,11 +1,13 @@
 import { Ticker } from "./ticker.js";
-import { createCanvas, registerFont } from "canvas";
+import { createCanvas, Image, registerFont } from "canvas";
 import fs from "node:fs";
 import path from "node:path";
 import { FPS, LAYOUT } from "./settings.js";
 import { Display } from "@owowagency/flipdot-emu";
 import "./preview.js";
 import "./api-slack.js";
+import { loadImage } from "canvas";
+import { resolve } from "node:path/posix";
 import { getSlackMessage } from "./api-slack.js";
 import { generateImage } from "./image-generation.js";
 
@@ -61,6 +63,28 @@ ctx.font = "18px monospace";
 // Align text precisely to pixel boundaries
 ctx.textBaseline = "top";
 
+let text = await getSlackMessage();
+const generatedImage = await generateImage("haha");
+
+ctx.fillStyle = "#fff";
+ctx.font = '12px "OpenSans" bold';
+const { actualBoundingBoxAscent, actualBoundingBoxLeft } =
+  ctx.measureText(text);
+new Image();
+ctx.fillText(text, actualBoundingBoxLeft + 2, actualBoundingBoxAscent + 5);
+const generatedImageObj = new Image();
+generatedImageObj.src = generatedImage;
+//
+// const generatedImage = await Promise.all([
+// loadImage(resolve(import.meta.dirname, "../image.png")),
+// ]);
+
+// function drawGeneratedImage(ctx, canvasWidth, canvasHeight) {
+// const x = 0
+// }
+
+// ctx.drawImage(generatedImage, 0, 0, width, height);
+
 // Initialize the ticker at x frames per second
 const ticker = new Ticker({ fps: FPS });
 
@@ -76,6 +100,7 @@ ticker.start(async ({ deltaTime, elapsedTime }) => {
   // Fill the canvas with a black background
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, width, height);
+  ctx.drawImage(generatedImageObj, 0, 0, width, height);
 
   // Convert image to binary (purely black and white) for flipdot display
   {
@@ -92,16 +117,6 @@ ticker.start(async ({ deltaTime, elapsedTime }) => {
     }
     ctx.putImageData(imageData, 0, 0);
   }
-
-  // let text = await getSlackMessage();
-  // ctx.fillStyle = "#fff";
-  // ctx.font = '12px "OpenSans" bold';
-  // const { actualBoundingBoxAscent, actualBoundingBoxLeft } =
-  //   ctx.measureText(text);
-  // ctx.fillText(text, actualBoundingBoxLeft + 2, actualBoundingBoxAscent + 5);
-  const generatedImage = await generateImage();
-  ctx.drawImage(generatedImage, 0, 0, width, height);
-  console.log(generateImage());
 
   {
     const imageData = ctx.getImageData(0, 0, width, height);
