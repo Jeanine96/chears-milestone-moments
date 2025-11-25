@@ -18,13 +18,6 @@ export async function getSlackMessage() {
       },
       [channelId]
     );
-    // prevent too many requests to the api
-    if (response.status === 429) {
-      const retryAfter = response.headers.get("retry-after") || 1;
-      // console.warn(`Rate limited. Retry after ${retryAfter} seconds.`);
-      await new Promise((res) => setTimeout(res, retryAfter * 2000));
-      return getSlackMessage(); // retry after waiting
-    }
 
     const data = await response.json();
 
@@ -34,7 +27,7 @@ export async function getSlackMessage() {
     }
 
     const latestMessage = data.messages[0]?.text || "";
-    const words = ["birthday", "verjaardag"];
+    const words = ["birthday", "verjaardag", "jarig"];
     const latestAnnouncement = String(latestMessage).toLocaleLowerCase();
 
     for (let i = 0; i < words.length; i++) {
