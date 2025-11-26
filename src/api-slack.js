@@ -28,15 +28,15 @@ export async function getSlackMessage() {
 
     const latestMessage = data.messages[0]?.text || "";
     const words = [
-      "birthday",
-      "verjaardag",
-      "jarig",
-      "gefeliciteerd",
-      "dienst",
-      "work celebration",
-      "work anniversary",
+      "BIRTHDAY",
+      "VERJAARDAG",
+      "JARIG",
+      "GEFELICITEERD",
+      "DIENST",
+      "WORK CELEBRATION",
+      "WORK ANNIVERSARY",
     ];
-    const latestAnnouncement = String(latestMessage).toLocaleLowerCase();
+    const latestAnnouncement = String(latestMessage).toLocaleUpperCase();
 
     for (let i = 0; i < words.length; i++) {
       if (latestAnnouncement.includes(words[i])) {
