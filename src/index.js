@@ -189,16 +189,10 @@ ticker.start(async ({ deltaTime, elapsedTime }) => {
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, width, height);
 
-  //
-  // -------------------------------
-  //   SCALE IMAGE TO 84 × 28 EXACTLY
-  // -------------------------------
-  //
   ctx.drawImage(generatedImageObj, 0, 0, width, height);
 
-  //
   // Convert to pure black/white
-  //
+
   const imageData = ctx.getImageData(0, 0, width, height);
   const data = imageData.data;
 
@@ -213,9 +207,8 @@ ticker.start(async ({ deltaTime, elapsedTime }) => {
 
   ctx.putImageData(imageData, 0, 0);
 
-  //
   // Output
-  //
+
   if (IS_DEV) {
     const filename = path.join(outputDir, "frame.png");
     const buffer = canvas.toBuffer("image/png");
