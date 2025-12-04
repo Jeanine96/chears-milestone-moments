@@ -35,6 +35,13 @@ export async function getSlackMessage() {
       "DIENST",
       "WORK CELEBRATION",
       "WORK ANNIVERSARY",
+      "YEARS EMPLOYED",
+      "JAAR IN DIENST",
+      "BIER",
+      "BEER",
+      "AF",
+      "VOLTOOID",
+      "COLLEGA",
     ];
     const latestAnnouncement = String(latestMessage).toLocaleUpperCase();
 
