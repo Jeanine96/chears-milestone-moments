@@ -1,127 +1,18 @@
-// import { Ticker } from "./ticker.js";
-// import { createCanvas, Image, registerFont } from "canvas";
-// import fs from "node:fs";
-// import path from "node:path";
-// import { FPS, LAYOUT } from "./settings.js";
-// import { Display } from "@owowagency/flipdot-emu";
-// import "./preview.js";
-// import "./api-slack.js";
-// import { generateImage } from "./image-generation.js";
-
-// const IS_DEV = process.argv.includes("--dev");
-
-// // Create display
-// const display = new Display({
-//   layout: LAYOUT,
-//   panelWidth: 28,
-//   isMirrored: true,
-//   transport: !IS_DEV
-//     ? {
-//         type: "serial",
-//         path: "/dev/ttyACM0",
-//         baudRate: 57600,
-//       }
-//     : {
-//         type: "ip",
-//         host: "127.0.0.1",
-//         port: 3000,
-//       },
-// });
-
-// const { width, height } = display;
-
-// // Create output directory if it doesn't exist
-// const outputDir = "./output";
-// if (!fs.existsSync(outputDir)) {
-//   fs.mkdirSync(outputDir, { recursive: true });
-// }
-
-// // Register fonts
-// registerFont(
-//   path.resolve(import.meta.dirname, "../fonts/OpenSans-Variable.ttf"),
-//   { family: "OpenSans" }
-// );
-// registerFont(
-//   path.resolve(import.meta.dirname, "../fonts/PPNeueMontrealMono-Regular.ttf"),
-//   { family: "PPNeueMontreal" }
-// );
-// registerFont(path.resolve(import.meta.dirname, "../fonts/Px437_ACM_VGA.ttf"), {
-//   family: "Px437_ACM_VGA",
-// });
-
-// // Create canvas with the specified resolution
-// const canvas = createCanvas(width, height);
-// const ctx = canvas.getContext("2d");
-
-// // Disable anti-aliasing and image smoothing
-// ctx.imageSmoothingEnabled = false;
-// // Set a pixel-perfect monospace font
-// ctx.font = "18px monospace";
-// // Align text precisely to pixel boundaries
-// ctx.textBaseline = "top";
-
-// const generatedImage = await generateImage();
-
-// new Image();
-// const generatedImageObj = new Image();
-// generatedImageObj.src = generatedImage;
-
-// // Initialize the ticker at x frames per second
-// const ticker = new Ticker({ fps: FPS });
-
-// ticker.start(async ({ deltaTime, elapsedTime }) => {
-//   // Clear the console
-//   console.clear();
-//   console.log("View at http://localhost:3000/view");
-
-//   // Fill the canvas with a black background
-//   ctx.fillStyle = "#000";
-//   ctx.fillRect(0, 0, width, height);
-//   ctx.drawImage(generatedImageObj, 0, 0, width, height);
-
-//   // Convert image to binary (purely black and white) for flipdot display
-//   {
-//     const imageData = ctx.getImageData(0, 0, width, height);
-//     const data = imageData.data;
-//     for (let i = 0; i < data.length; i += 4) {
-//       // Apply thresholding - any pixel above 127 brightness becomes white (255), otherwise black (0)
-//       const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-//       const binary = brightness > 127 ? 255 : 0;
-//       data[i] = binary; // R
-//       data[i + 1] = binary; // G
-//       data[i + 2] = binary; // B
-//       data[i + 3] = 255; // The board is not transparent :-)
-//     }
-//     ctx.putImageData(imageData, 0, 0);
-//   }
-
-//   if (IS_DEV) {
-//     // Save the canvas as a PNG file
-//     const filename = path.join(outputDir, "frame.png");
-//     //display image of DALLE-3
-//     const buffer = canvas.toBuffer("image/png");
-//     fs.writeFileSync(filename, buffer);
-//   } else {
-//     const imageData = ctx.getImageData(0, 0, display.width, display.height);
-//     display.setImageData(imageData);
-//     if (display.isDirty()) {
-//       display.flush();
-//     }
-//   }
-//   console.log(`Eslapsed time: ${(elapsedTime / 1000).toFixed(2)}s`);
-//   console.log(`Delta time: ${deltaTime.toFixed(2)}ms`);
-//   console.timeEnd("Write frame");
-// });
-
 import { Ticker } from "./ticker.js";
-import { createCanvas, Image, registerFont } from "canvas";
+import { createCanvas, registerFont } from "canvas";
 import fs from "node:fs";
 import path from "node:path";
 import { FPS, LAYOUT } from "./settings.js";
 import { Display } from "@owowagency/flipdot-emu";
 import "./preview.js";
 import "./api-slack.js";
-import { generateImage } from "./image-generation.js";
+import { getSlackMessage } from "./api-slack.js";
+
+// Import animations
+import { birthdayAnimation } from "./animations/birthday-animation.js";
+import { beerAnimation } from "./animations/time-for-beer.js";   
+import { weRockAnimation } from "./animations/we-rock-animation.js";
+import { welcomeToTeamAnimation } from "./animations/welcome-to-team.js";
 
 const IS_DEV = process.argv.includes("--dev");
 
@@ -168,60 +59,140 @@ registerFont(path.resolve(import.meta.dirname, "../fonts/Px437_ACM_VGA.ttf"), {
 const canvas = createCanvas(width, height);
 const ctx = canvas.getContext("2d");
 
-// Disable anti-aliasing
-ctx.imageSmoothingEnabled = false;
-ctx.font = "18px monospace";
-ctx.textBaseline = "top";
+// Get the Slack message
+const slackMessage = await getSlackMessage();
 
-const generatedImage = await generateImage();
+// Animation registry
+const animations = {
+  gefeliciteerd: birthdayAnimation,
+  bier: beerAnimation,
+  voltooid: weRockAnimation,
+  collega: welcomeToTeamAnimation
+};
 
-const generatedImageObj = new Image();
-generatedImageObj.src = generatedImage;
+// Detect which animation to use
+function detectAnimation(message) {
+  const lower = message.toLowerCase();
+  for (const keyword of Object.keys(animations)) {
+    if (lower.includes(keyword)) {
+      console.log(`Detected animation keyword: ${keyword}`);
+      return animations[keyword];
+    }
+  }
+  return null;
+}
 
-// Initialize ticker
-const ticker = new Ticker({ fps: FPS });
+const chosenAnimation = detectAnimation(slackMessage);
 
-ticker.start(async ({ deltaTime, elapsedTime }) => {
-  console.clear();
-  console.log("View at http://localhost:3000/view");
+// Text scrolling variables
+let textX = width;
+let cyclesCompleted = 0;
+const maxCycles = 1;
+const speed = 2;
 
-  // Fill the canvas with black
-  ctx.fillStyle = "#000";
-  ctx.fillRect(0, 0, width, height);
+ctx.font = '12px "OpenSans" bold';
+const textWidth = ctx.measureText(slackMessage).width + 20;
 
-  ctx.drawImage(generatedImageObj, 0, 0, width, height);
-
-  // Convert to pure black/white
-
+// Helper to convert canvas to black & white
+function toBlackAndWhite(ctx) {
   const imageData = ctx.getImageData(0, 0, width, height);
   const data = imageData.data;
-
   for (let i = 0; i < data.length; i += 4) {
     const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
     const binary = brightness > 127 ? 255 : 0;
-    data[i] = binary;
-    data[i + 1] = binary;
-    data[i + 2] = binary;
+    data[i] = data[i + 1] = data[i + 2] = binary;
     data[i + 3] = 255;
   }
-
   ctx.putImageData(imageData, 0, 0);
+}
 
-  // Output
-
+// Draw frame to display or save
+function renderFrame() {
   if (IS_DEV) {
     const filename = path.join(outputDir, "frame.png");
-    const buffer = canvas.toBuffer("image/png");
-    fs.writeFileSync(filename, buffer);
+    fs.writeFileSync(filename, canvas.toBuffer("image/png"));
   } else {
-    const imageData = ctx.getImageData(0, 0, display.width, display.height);
-    display.setImageData(imageData);
-    if (display.isDirty()) {
-      display.flush();
-    }
+    display.setImageData(ctx.getImageData(0, 0, width, height));
+    if (display.isDirty()) display.flush();
+  }
+}
+
+// Generic animation runner
+function playAnimation(animationFrames) {
+  if (!animationFrames) {
+    console.log("No animation selected — ending program.");
+    return;
   }
 
-  console.log(`Elapsed time: ${(elapsedTime / 1000).toFixed(2)}s`);
-  console.log(`Delta time: ${deltaTime.toFixed(2)}ms`);
-  console.timeEnd("Write frame");
-});
+  const frames = Object.values(animationFrames);
+  const loops = 5;
+  let loopCount = 0;
+  let frameIndex = 0;
+
+  const ticker = new Ticker({ fps: FPS / 7 });
+
+  ticker.start(() => {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, width, height);
+
+    const frame = frames[frameIndex];
+
+    // draw 1 pixel per point
+    for (let y = 0; y < frame.length; y++) {
+      for (let x = 0; x < frame[y].length; x++) {
+        if (frame[y][x]) {
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+
+    renderFrame();
+
+    frameIndex++;
+
+    if (frameIndex >= frames.length) {
+      frameIndex = 0;
+      loopCount++;
+
+      if (loopCount >= loops) {
+        ticker.stop();
+      }
+    }
+  });
+}
+
+// Start scrolling ticker
+function startTicker() {
+  const ticker = new Ticker({ fps: FPS });
+
+  ticker.start(() => {
+    ctx.fillStyle = "#000";
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = "#fff";
+    ctx.font = '12px "OpenSans" bold';
+
+    ctx.fillText(slackMessage, textX, 18);
+    ctx.fillText(slackMessage, textX + textWidth, 18);
+
+    textX -= speed;
+
+    if (textX <= -textWidth) {
+      textX += textWidth;
+      cyclesCompleted++;
+
+      if (cyclesCompleted >= maxCycles) {
+        ticker.stop();
+        playAnimation(chosenAnimation);
+        return;
+      }
+    }
+
+    toBlackAndWhite(ctx);
+    renderFrame();
+  });
+}
+
+startTicker();
+
