@@ -5,8 +5,7 @@ import path from "node:path";
 import { FPS, LAYOUT } from "./settings.js";
 import { Display } from "@owowagency/flipdot-emu";
 import "./preview.js";
-import "./api-slack.js";
-import { getSlackMessage } from "./api-slack.js";
+import { slackApp } from "./websocket-slack.js";
 
 // Import animations
 import { birthdayAnimation } from "./animations/birthday-animation.js";
@@ -16,84 +15,52 @@ import { welcomeToTeamAnimation } from "./animations/welcome-to-team.js";
 
 const IS_DEV = process.argv.includes("--dev");
 
-// Create display
+// --- Display Setup ---
 const display = new Display({
   layout: LAYOUT,
   panelWidth: 28,
   isMirrored: true,
   transport: !IS_DEV
-    ? {
-        type: "serial",
-        path: "/dev/ttyACM0",
-        baudRate: 57600,
-      }
-    : {
-        type: "ip",
-        host: "127.0.0.1",
-        port: 3000,
-      },
+    ? { type: "serial", path: "/dev/ttyACM0", baudRate: 57600 }
+    : { type: "ip", host: "127.0.0.1", port: 3000 },
 });
 
 const { width, height } = display;
 
-// Create output directory
+// Output folder
 const outputDir = "./output";
-if (!fs.existsSync(outputDir)) {
-  fs.mkdirSync(outputDir, { recursive: true });
-}
+if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
 
 // Register fonts
-registerFont(
-  path.resolve(import.meta.dirname, "../fonts/OpenSans-Variable.ttf"),
-  { family: "OpenSans" }
-);
-registerFont(
-  path.resolve(import.meta.dirname, "../fonts/PPNeueMontrealMono-Regular.ttf"),
-  { family: "PPNeueMontreal" }
-);
-registerFont(path.resolve(import.meta.dirname, "../fonts/Px437_ACM_VGA.ttf"), {
-  family: "Px437_ACM_VGA",
-});
+registerFont(path.resolve(import.meta.dirname, "../fonts/OpenSans-Variable.ttf"), { family: "OpenSans" });
+registerFont(path.resolve(import.meta.dirname, "../fonts/PPNeueMontrealMono-Regular.ttf"), { family: "PPNeueMontreal" });
+registerFont(path.resolve(import.meta.dirname, "../fonts/Px437_ACM_VGA.ttf"), { family: "Px437_ACM_VGA" });
 
-// Create canvas
+// Canvas
 const canvas = createCanvas(width, height);
 const ctx = canvas.getContext("2d");
 
-// Get the Slack message
-const slackMessage = await getSlackMessage();
-
-// Animation registry
-const animations = {
+// --- Animations ---
+const wordsToAnimations = {
   gefeliciteerd: birthdayAnimation,
   bier: beerAnimation,
   voltooid: weRockAnimation,
-  collega: welcomeToTeamAnimation
+  collega: welcomeToTeamAnimation,
 };
 
-// Detect which animation to use
+// Detect animation keyword
 function detectAnimation(message) {
   const lower = message.toLowerCase();
-  for (const keyword of Object.keys(animations)) {
+  for (const keyword of Object.keys(wordsToAnimations)) {
     if (lower.includes(keyword)) {
       console.log(`Detected animation keyword: ${keyword}`);
-      return animations[keyword];
+      return wordsToAnimations[keyword];
     }
   }
   return null;
 }
 
-const chosenAnimation = detectAnimation(slackMessage);
-
-// Text scrolling variables
-let textX = width;
-let cyclesCompleted = 0;
-const maxCycles = 1;
-const speed = 2;
-
-ctx.font = '12px "OpenSans" bold';
-const textWidth = ctx.measureText(slackMessage).width + 20;
-
-// Helper to convert canvas to black & white
+// Convert canvas to black & white
 function toBlackAndWhite(ctx) {
   const imageData = ctx.getImageData(0, 0, width, height);
   const data = imageData.data;
@@ -106,7 +73,7 @@ function toBlackAndWhite(ctx) {
   ctx.putImageData(imageData, 0, 0);
 }
 
-// Draw frame to display or save
+// Render frame
 function renderFrame() {
   if (IS_DEV) {
     const filename = path.join(outputDir, "frame.png");
@@ -117,82 +84,106 @@ function renderFrame() {
   }
 }
 
-// Generic animation runner
+// --- Play animation ---
 function playAnimation(animationFrames) {
-  if (!animationFrames) {
-    console.log("No animation selected — ending program.");
-    return;
-  }
+  if (!animationFrames) return;
 
   const frames = Object.values(animationFrames);
   const loops = 5;
   let loopCount = 0;
   let frameIndex = 0;
 
-  const ticker = new Ticker({ fps: FPS / 7 });
+  return new Promise((resolve) => {
+    const ticker = new Ticker({ fps: FPS / 7 });
+    ticker.start(() => {
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, width, height);
 
-  ticker.start(() => {
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, width, height);
-
-    const frame = frames[frameIndex];
-
-    // draw 1 pixel per point
-    for (let y = 0; y < frame.length; y++) {
-      for (let x = 0; x < frame[y].length; x++) {
-        if (frame[y][x]) {
-          ctx.fillStyle = "#fff";
-          ctx.fillRect(x, y, 1, 1);
+      const frame = frames[frameIndex];
+      for (let y = 0; y < frame.length; y++) {
+        for (let x = 0; x < frame[y].length; x++) {
+          if (frame[y][x]) {
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(x, y, 1, 1);
+          }
         }
       }
-    }
 
-    renderFrame();
+      renderFrame();
 
-    frameIndex++;
-
-    if (frameIndex >= frames.length) {
-      frameIndex = 0;
-      loopCount++;
-
-      if (loopCount >= loops) {
-        ticker.stop();
+      frameIndex++;
+      if (frameIndex >= frames.length) {
+        frameIndex = 0;
+        loopCount++;
+        if (loopCount >= loops) ticker.stop(), resolve();
       }
-    }
+    });
   });
 }
 
-// Start scrolling ticker
-function startTicker() {
-  const ticker = new Ticker({ fps: FPS });
+// --- Start ticker ---
+function startTicker(message, chosenAnimation) {
+  let textX = width;
+  let cyclesCompleted = 0;
+  const maxCycles = 1;
+  const speed = 2;
+  const textWidth = ctx.measureText(message).width + 20;
 
-  ticker.start(() => {
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, width, height);
+  return new Promise((resolve) => {
+    const ticker = new Ticker({ fps: FPS });
+    ticker.start(() => {
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, width, height);
 
-    ctx.fillStyle = "#fff";
-    ctx.font = '12px "OpenSans" bold';
+      ctx.fillStyle = "#fff";
+      ctx.font = '12px "OpenSans" bold';
+      ctx.fillText(message, textX, 18);
+      ctx.fillText(message, textX + textWidth, 18);
 
-    ctx.fillText(slackMessage, textX, 18);
-    ctx.fillText(slackMessage, textX + textWidth, 18);
+      textX -= speed;
 
-    textX -= speed;
-
-    if (textX <= -textWidth) {
-      textX += textWidth;
-      cyclesCompleted++;
-
-      if (cyclesCompleted >= maxCycles) {
-        ticker.stop();
-        playAnimation(chosenAnimation);
-        return;
+      if (textX <= -textWidth) {
+        textX += textWidth;
+        cyclesCompleted++;
+        if (cyclesCompleted >= maxCycles) {
+          ticker.stop();
+          playAnimation(chosenAnimation).then(resolve);
+          return;
+        }
       }
-    }
 
-    toBlackAndWhite(ctx);
-    renderFrame();
+      toBlackAndWhite(ctx);
+      renderFrame();
+    });
   });
 }
 
-startTicker();
+// --- Message Queue ---
+const messageQueue = [];
+let isProcessing = false;
 
+async function processQueue() {
+  if (isProcessing || messageQueue.length === 0) return;
+  isProcessing = true;
+
+  const { message, animation } = messageQueue.shift();
+  await startTicker(message, animation);
+
+  isProcessing = false;
+  processQueue(); // process next message
+}
+
+// --- Handle Slack messages ---
+const channelId = process.env.CHANNEL_ID;
+
+slackApp.message(async ({ message: slackMessage }) => {
+  if (!slackMessage.text) return;
+  if (slackMessage.channel !== channelId) return;
+
+  const text = slackMessage.text;
+  const chosenAnimation = detectAnimation(text);
+
+  console.log("Queued message:", text);
+  messageQueue.push({ message: text, animation: chosenAnimation });
+  processQueue();
+});
