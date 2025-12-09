@@ -22,9 +22,8 @@ export const slackApp = new App({
 // --- Fixed keyword list ---
 export const keywords = [
   "GEFELICITEERD",
-  "JAAR_IN_DIENST",
+  "DIENST",
   "BIER",
-  "GOED_BEZIG",
   "VOLTOOID",
-  "NIEUWE_COLLEGA"
+  "WELKOM"
 ];

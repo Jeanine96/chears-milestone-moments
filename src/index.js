@@ -117,7 +117,7 @@ function startTicker(message, chosenAnimation) {
   let cyclesCompleted = 0;
   const maxCycles = 1;
   const speed = 2;
-  const textWidth = ctx.measureText(message).width + 20;
+  const textWidth = ctx.measureText(message).width + 30;
 
   return new Promise((resolve) => {
     const ticker = new Ticker({ fps: FPS });

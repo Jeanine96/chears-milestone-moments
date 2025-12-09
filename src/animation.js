@@ -8,8 +8,7 @@ export const wordsToAnimations = {
   gefeliciteerd: birthdayAnimation,
   bier: beerAnimation,
   voltooid: weRockAnimation,
-  nieuwe_collega: welcomeToTeamAnimation,
-  jaar_in_dienst: birthdayAnimation,
-  goed_bezig: weRockAnimation,
+  welkom: welcomeToTeamAnimation,
+  dienst: birthdayAnimation,
 };
 
