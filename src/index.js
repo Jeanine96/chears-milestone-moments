@@ -6,12 +6,11 @@ import { FPS, LAYOUT } from "./settings.js";
 import { Display } from "@owowagency/flipdot-emu";
 import "./preview.js";
 import { slackApp } from "./websocket-slack.js";
+import dotenv from "dotenv";
+import { wordsToAnimations } from "./animation.js";
+import { keywords } from "./websocket-slack.js";
 
-// Import animations
-import { birthdayAnimation } from "./animations/birthday-animation.js";
-import { beerAnimation } from "./animations/time-for-beer.js";   
-import { weRockAnimation } from "./animations/we-rock-animation.js";
-import { welcomeToTeamAnimation } from "./animations/welcome-to-team.js";
+dotenv.config();
 
 const IS_DEV = process.argv.includes("--dev");
 
@@ -40,17 +39,8 @@ registerFont(path.resolve(import.meta.dirname, "../fonts/Px437_ACM_VGA.ttf"), { 
 const canvas = createCanvas(width, height);
 const ctx = canvas.getContext("2d");
 
-// --- Animations ---
-const wordsToAnimations = {
-  gefeliciteerd: birthdayAnimation,
-  bier: beerAnimation,
-  voltooid: weRockAnimation,
-  collega: welcomeToTeamAnimation,
-};
-
-// Detect animation keyword
-function detectAnimation(message) {
-  const lower = message.toLowerCase();
+function detectAnimation(word) {
+  const lower = word.toLowerCase();
   for (const keyword of Object.keys(wordsToAnimations)) {
     if (lower.includes(keyword)) {
       console.log(`Detected animation keyword: ${keyword}`);
@@ -89,7 +79,7 @@ function playAnimation(animationFrames) {
   if (!animationFrames) return;
 
   const frames = Object.values(animationFrames);
-  const loops = 5;
+  const loops = 3;
   let loopCount = 0;
   let frameIndex = 0;
 
@@ -121,7 +111,7 @@ function playAnimation(animationFrames) {
   });
 }
 
-// --- Start ticker ---
+// --- Start ticker (scrolling text) ---
 function startTicker(message, chosenAnimation) {
   let textX = width;
   let cyclesCompleted = 0;
@@ -170,7 +160,20 @@ async function processQueue() {
   await startTicker(message, animation);
 
   isProcessing = false;
-  processQueue(); // process next message
+  processQueue();
+}
+
+// Keyword classifier
+export function classifyMessage(message) {
+  if (!message) return "";
+
+  const upperText = message.toUpperCase();
+  for (const word of keywords) {
+    if (upperText.includes(word)) {
+      return word;
+    }
+  }
+  return "";
 }
 
 // --- Handle Slack messages ---
@@ -181,9 +184,20 @@ slackApp.message(async ({ message: slackMessage }) => {
   if (slackMessage.channel !== channelId) return;
 
   const text = slackMessage.text;
+
+  // Filter using your keyword list
+  const category = classifyMessage(text);
+  if (!category) {
+    console.log("Filtered out (no keyword match):", text);
+    return;
+  }
+
   const chosenAnimation = detectAnimation(text);
 
-  console.log("Queued message:", text);
+  console.log("Queued message:", text, "Category:", category);
   messageQueue.push({ message: text, animation: chosenAnimation });
   processQueue();
 });
+
+slackApp;
+

@@ -20,7 +20,7 @@ export const slackApp = new App({
 })();
 
 // --- Fixed keyword list ---
-const keywords = [
+export const keywords = [
   "GEFELICITEERD",
   "JAAR_IN_DIENST",
   "BIER",
@@ -28,18 +28,3 @@ const keywords = [
   "VOLTOOID",
   "NIEUWE_COLLEGA"
 ];
-
-// --- classifyMessage using fixed keywords ---
-export function classifyMessage(message) {
-  if (!message) return "OTHER";
-
-  const upperText = message.toUpperCase();
-
-  for (const word of keywords) {
-    if (upperText.includes(word)) {
-      return word; // Return the matched keyword as category
-    }
-  }
-
-  return "OTHER";
-}
