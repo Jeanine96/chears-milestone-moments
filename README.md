@@ -1,50 +1,63 @@
-# Node Flipdots
+# Chears Milestone moments
 
-A Node.js project for controlling and simulating flipdot displays, perfect for educational purposes and creative coding exercises.
+To increase employee engagement, company milestones can be displayed on the Flip Dot Board. Examples include birthdays and work anniversaries.
 
-## Overview
+OWOW uses Slack for internal communication. Selected Slack messages can be shown on the Flip Dot Board with a matching animation to highlight an employee or team. Colleagues can respond to the milestone, and these reactions are displayed after the animation.
 
-This project provides a framework for generating animations for flipdot displays, which are electromechanical displays consisting of small discs (dots) that can be flipped to show different colors (typically black or white). The application:
+OpenAI can be used to filter relevant Slack messages, ensuring that only appropriate content appears on the Flip Dot Board.
 
-- Creates bitmap graphics on a virtual canvas
-- Processes these graphics for flipdot compatibility
-- Provides a real-time web preview
-- Outputs frames as PNG images
 
 ## Installation
 
-Make sure you have [Node.js](https://nodejs.org/en) installed.
+This application is made in Node.js make sure you have installed it.
 
-Clone the repository and install dependencies:
 
 ```bash
-git clone <repository-url>
-cd node-flipdots
-npm install
+npm install 
+npm install @slack/bolt
+npm install openai
+npm install dotenv
 ```
 
 ## Running the Application
-
 Start the development server with:
 
-```bash
+```
 npm run dev
 ```
-
 This runs the application with nodemon for automatic reloading when files are modified.
 
 Once running:
-1. Open your browser and navigate to `http://localhost:3000/view`
-2. You'll see the real-time preview of the flipdot display output
+
+1: Open your browser and navigate to http://localhost:3000/view
+
+2: You'll see the real-time preview of the flipdot display output
 
 ## Project Structure
-
-- `src/index.js` - Main entry point that sets up the canvas, rendering loop, and example animations
-- `src/ticker.js` - Handles the timing mechanism (like requestAnimationFrame for Node.js)
-- `src/preview.js` - Creates a simple HTTP server for real-time preview in the browser
-- `src/settings.js` - Configuration for display resolution, panel layout, and framerate
-- `output/` - Directory containing generated PNG frames
-
+````
+project-root/
+├── animations/
+│   ├── birthday-animation.js      # Birthday animation frames
+│   ├── time-for-beer.js           # Celebration animation
+│   ├── we-rock-animation.js       # Team milestone animation
+│   └── welcome-to-team.js         # New employee animation
+│
+├── src/
+│   ├── index.js                   # Main entry point: canvas setup, rendering, text scrolling, Slack message queue
+│   ├── animation.js               # Triggers animations based on Slack keywords
+│   ├── ticker.js                  # Timing mechanism (Node.js animation loop)
+│   ├── websocket-slack.js         # Slack WebSocket (Socket Mode) connection
+│   ├── preview.js                 # HTTP server for real-time browser preview
+│   └── settings.js                # Display resolution, panel layout, and framerate config
+│
+├── output/
+│   └── *.png                      # Generated animation frames
+│
+├── .env                           # Environment variables (API keys, secrets)
+├── .env.example                   # Example environment configuration
+├── package.json
+└── README.md
+````
 ## Settings and Configuration
 
 The display settings can be modified in `src/settings.js`:
@@ -101,17 +114,16 @@ const binary = brightness > 127 ? 255 : 0;
 
 The rendered frames are saved as PNG files in the `output` directory and can be accessed via the web preview or directly from the filesystem.
 
-## Project Extensions
+## Roadmap
 
-Some ideas to extend this project:
-- Add text scrolling animations
-- Implement Conway's Game of Life
-- Create a clock or countdown timer
-- Add socket.io for remote control
-- Create a library of animation effects
-- Build an API to control the display
+For the future the following features can be changed/added:
+- Instead of animations and scrolling text, the company prefers a creatively generated picture from OpenAI to appear on the Flip Dot Board.
 
 ## Dependencies
 
 - [`canvas`](https://www.npmjs.com/package/canvas) - For creating and manipulating graphics
-- [`nodemon`](https://www.npmjs.com/package/nodemon) - For development auto-reloading 
+- [`nodemon`](https://www.npmjs.com/package/nodemon) - For development auto-reloading
+
+## License
+This project is created for the company OWOW.
+
