@@ -15,6 +15,7 @@
 	},
 	"dependencies": {
 		"@owowagency/flipdot-emu": "file:packages/owowagency-flipdot-emu-1.0.0.tgz",
+		"@slack/bolt": "^4.6.0",
 		"@slack/oauth": "^3.0.4",
 		"@slack/web-api": "^7.12.0",
 		"canvas": "^3.1.0",
