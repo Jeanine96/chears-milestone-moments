@@ -36,25 +36,25 @@ Once running:
 ## Project Structure
 ````
 project-root/
-├── animations/
-│   ├── birthday-animation.js      # Birthday animation frames
-│   ├── time-for-beer.js           # Celebration animation
-│   ├── we-rock-animation.js       # Team milestone animation
-│   └── welcome-to-team.js         # New employee animation
-│
 ├── src/
-│   ├── index.js                   # Main entry point: canvas setup, rendering, text scrolling, Slack message queue
-│   ├── animation.js               # Triggers animations based on Slack keywords
-│   ├── ticker.js                  # Timing mechanism (Node.js animation loop)
-│   ├── websocket-slack.js         # Slack WebSocket (Socket Mode) connection
-│   ├── preview.js                 # HTTP server for real-time browser preview
-│   └── settings.js                # Display resolution, panel layout, and framerate config
+│   ├── animations/
+│   │   ├── birthday-animation.js      # Birthday animation frames
+│   │   ├── time-for-beer.js           # Celebration animation
+│   │   ├── we-rock-animation.js       # Team milestone animation
+│   │   └── welcome-to-team.js         # New employee animation
+│   │
+│   ├── index.js                       # Main entry point: canvas setup, rendering, text scrolling, Slack message queue
+│   ├── animation.js                   # Triggers animations based on Slack keywords
+│   ├── ticker.js                      # Timing mechanism (Node.js animation loop)
+│   ├── websocket-slack.js             # Slack WebSocket (Socket Mode) connection
+│   ├── preview.js                     # HTTP server for real-time browser preview
+│   └── settings.js                    # Display resolution, panel layout, and framerate config
 │
 ├── output/
-│   └── *.png                      # Generated animation frames
+│   └── *.png                          # Generated animation frames
 │
-├── .env                           # Environment variables (API keys, secrets)
-├── .env.example                   # Example environment configuration
+├── .env                               # Environment variables (API keys, secrets)
+├── .env.example                       # Example environment configuration
 ├── package.json
 └── README.md
 ````
