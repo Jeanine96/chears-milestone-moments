@@ -118,6 +118,8 @@ The rendered frames are saved as PNG files in the `output` directory and can be 
 
 For the future the following features can be changed/added:
 - Instead of animations and scrolling text, the company prefers a creatively generated picture from OpenAI to appear on the Flip Dot Board.
+- Create a variable port, because with online hosting the port changes.
+- Filter messages through OpenAI to assess whether they contain a milestone that may be displayed on the Flip Dot Board.
 
 ## Dependencies
 
@@ -126,6 +128,25 @@ For the future the following features can be changed/added:
 
 ## License
 This project is created for the company OWOW.
+### Fonts
+
+This project uses the following fonts:
+
+#### Open Sans
+- File: `OpenSans-Variable.ttf`
+- License: Apache License 2.0
+- Copyright: © Google
+- License URL: https://www.apache.org/licenses/LICENSE-2.0
+
+#### PP Neue Montreal Mono
+- File: `PPNeueMontrealMono-Regular.ttf`
+- License: Pangram Pangram (Free-to-try / Personal & Non-Commercial use)
+- Copyright: © Pangram Pangram Foundry
+- Included: Yes
+
+PP Neue Montreal Mono is used **only for personal and non-commercial purposes** in this project.
+Commercial use requires purchasing a separate license from Pangram Pangram.
+
 
 ## Demo video
 [Watch the demo video](https://youtu.be/Ka2r0qe9rbo)
